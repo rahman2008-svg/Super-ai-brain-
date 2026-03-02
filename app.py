@@ -1,14 +1,18 @@
-from flask import Flask, render_template, request, jsonify
 import sqlite3
-import wikipedia
 import os
+from flask import Flask, render_template, request, jsonify
+import wikipedia
 
+# Flask app
 app = Flask(__name__)
-wikipedia.set_lang("bn")
+wikipedia.set_lang("bn")  # বাংলা Wikipedia
 
+# DB file path
 DB_PATH = "super_ai.db"
 
-# Ensure DB exists with table
+# =========================
+# Initialize DB (auto-create)
+# =========================
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -22,9 +26,11 @@ def init_db():
     conn.commit()
     conn.close()
 
-init_db()
+init_db()  # App start হলে DB ready হবে
 
-# DB operations
+# =========================
+# DB functions
+# =========================
 def get_answer_from_db(question):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -42,6 +48,9 @@ def save_answer_to_db(question, answer):
     conn.commit()
     conn.close()
 
+# =========================
+# Wikipedia fetch
+# =========================
 def get_answer_from_wikipedia(question):
     try:
         summary = wikipedia.summary(question, sentences=2)
@@ -49,7 +58,9 @@ def get_answer_from_wikipedia(question):
     except:
         return None
 
+# =========================
 # Routes
+# =========================
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -60,15 +71,18 @@ def ask():
     question = data.get("question", "").strip()
     if not question:
         return jsonify({"answer": "প্রশ্ন দিতে হবে।"})
-    
+
+    # Check DB first
     answer = get_answer_from_db(question)
     if answer:
         return jsonify({"answer": answer})
 
+    # Else try Wikipedia
     wiki_answer = get_answer_from_wikipedia(question)
     if wiki_answer:
         return jsonify({"answer": wiki_answer})
 
+    # If nothing found
     return jsonify({"answer": "আমি এখনো জানি না। তুমি কি আমাকে শিখাবে?"})
 
 @app.route("/teach", methods=["POST"])
@@ -81,6 +95,9 @@ def teach():
     save_answer_to_db(question, answer)
     return jsonify({"status": "success", "message": "আমি শিখেছি!"})
 
+# =========================
+# Run app
+# =========================
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
