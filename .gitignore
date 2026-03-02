@@ -1,12 +1,4 @@
-# Python cache
-__pycache__/
-*.pyc
-
-# Virtual environment
-venv/
-
-# Database files (VERY IMPORTANT)
 *.db
-
-# OS / editor junk
-.DS_Store
+__pycache__/
+venv/
+.env

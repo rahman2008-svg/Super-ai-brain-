@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <title>Super AI Brain</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Super AI Brain</h1>
+    <input type="text" id="question" placeholder="প্রশ্ন লিখুন">
+    <button onclick="ask()">জিজ্ঞাসা করুন</button>
+    <p id="answer"></p>
+
+    <script>
+    function ask() {
+        const question = document.getElementById("question").value;
+        fetch("/ask", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question })
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("answer").innerText = data.answer;
+        });
+    }
+    </script>
+</body>
+</html>
