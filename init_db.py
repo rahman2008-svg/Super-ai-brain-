@@ -12,5 +12,4 @@ CREATE TABLE IF NOT EXISTS knowledge (
 """)
 conn.commit()
 conn.close()
-
-print("Database initialized!")
+print("Database initialized successfully!")
