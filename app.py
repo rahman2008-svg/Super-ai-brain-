@@ -7,10 +7,32 @@ import os
 app = Flask(__name__)
 wikipedia.set_lang("bn")  # বাংলা Wikipedia
 
-# Database path
+# DB path
 DB_PATH = os.path.join(os.getcwd(), "super_ai.db")
 
-# Fetch answer from DB
+# -------------------------
+# Auto-create knowledge table
+# -------------------------
+def init_db():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS knowledge (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        question TEXT UNIQUE,
+        answer TEXT
+    )
+    """)
+    conn.commit()
+    conn.close()
+    print("✅ Database ready with Teach system")
+
+# Initialize DB at startup
+init_db()
+
+# -------------------------
+# DB helper functions
+# -------------------------
 def get_answer_from_db(question):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -21,7 +43,6 @@ def get_answer_from_db(question):
         return row[0]
     return None
 
-# Save answer to DB
 def save_answer_to_db(question, answer):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -29,7 +50,9 @@ def save_answer_to_db(question, answer):
     conn.commit()
     conn.close()
 
-# Fetch answer from Wikipedia
+# -------------------------
+# Wikipedia search
+# -------------------------
 def get_answer_from_wikipedia(question):
     try:
         summary = wikipedia.summary(question, sentences=2)
@@ -37,7 +60,9 @@ def get_answer_from_wikipedia(question):
     except:
         return None
 
+# -------------------------
 # Routes
+# -------------------------
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -48,7 +73,7 @@ def ask():
     question = data.get("question", "").strip()
     if not question:
         return jsonify({"answer": "প্রশ্ন দিতে হবে।"})
-    
+
     # Check DB first
     answer = get_answer_from_db(question)
     if answer:
@@ -72,7 +97,9 @@ def teach():
     save_answer_to_db(question, answer)
     return jsonify({"status": "success", "message": "আমি শিখেছি!"})
 
+# -------------------------
 # Run app
+# -------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render auto-assign PORT
+    port = int(os.environ.get("PORT", 5000))  # Render uses $PORT
     app.run(host="0.0.0.0", port=port, debug=True)
