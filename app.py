@@ -1,12 +1,16 @@
 from flask import Flask, render_template, request, jsonify
 import sqlite3
 import wikipedia
+import os
 
+# Flask app
 app = Flask(__name__)
 wikipedia.set_lang("bn")  # বাংলা Wikipedia
 
-DB_PATH = "super_ai.db"
+# Database path
+DB_PATH = os.path.join(os.getcwd(), "super_ai.db")
 
+# Fetch answer from DB
 def get_answer_from_db(question):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -17,6 +21,7 @@ def get_answer_from_db(question):
         return row[0]
     return None
 
+# Save answer to DB
 def save_answer_to_db(question, answer):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
@@ -24,6 +29,7 @@ def save_answer_to_db(question, answer):
     conn.commit()
     conn.close()
 
+# Fetch answer from Wikipedia
 def get_answer_from_wikipedia(question):
     try:
         summary = wikipedia.summary(question, sentences=2)
@@ -31,6 +37,7 @@ def get_answer_from_wikipedia(question):
     except:
         return None
 
+# Routes
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -42,7 +49,7 @@ def ask():
     if not question:
         return jsonify({"answer": "প্রশ্ন দিতে হবে।"})
     
-    # Check Teach DB first
+    # Check DB first
     answer = get_answer_from_db(question)
     if answer:
         return jsonify({"answer": answer})
@@ -65,5 +72,7 @@ def teach():
     save_answer_to_db(question, answer)
     return jsonify({"status": "success", "message": "আমি শিখেছি!"})
 
+# Run app
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render auto-assign PORT
+    app.run(host="0.0.0.0", port=port, debug=True)
