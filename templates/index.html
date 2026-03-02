@@ -2,57 +2,148 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>🧠 Super AI Brain</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super AI Brain 🧠</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        #chat {
+            border: 1px solid #ddd;
+            height: 400px;
+            overflow-y: auto;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .message {
+            margin: 5px 0;
+        }
+        .user {
+            color: white;
+            background: #007bff;
+            padding: 5px 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .ai {
+            color: white;
+            background: #28a745;
+            padding: 5px 10px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        input[type=text] {
+            width: 75%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #teach-section {
+            display: none;
+            margin-top: 15px;
+        }
+        #teach-section input {
+            width: 70%;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧠 Super AI Brain</h1>
-        <input type="text" id="question" placeholder="প্রশ্ন লিখুন...">
-        <button onclick="ask()">Ask</button>
+        <h1>Super AI Brain 🧠</h1>
+        <div id="chat"></div>
+        <input type="text" id="question" placeholder="আপনার প্রশ্ন লিখুন...">
+        <button onclick="askAI()">জিজ্ঞেস করুন</button>
 
-        <div id="answer"></div>
-
-        <div id="teach-box" style="display:none;">
-            <textarea id="teach-answer" placeholder="উত্তর লিখুন..."></textarea>
-            <button onclick="teach()">শিখাও</button>
+        <div id="teach-section">
+            <h3>শিখিয়ে দিন</h3>
+            <input type="text" id="teach-answer" placeholder="উত্তর লিখুন...">
+            <button onclick="teachAI()">শিখিয়ে দিন</button>
         </div>
     </div>
 
-<script>
-function ask() {
-    let question = document.getElementById("question").value;
-    fetch("/ask", {
-        method: "POST",
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({question})
-    })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("answer").innerText = data.answer;
-        if (data.answer.includes("আমি এখনো জানি না")) {
-            document.getElementById("teach-box").style.display = "block";
-        } else {
-            document.getElementById("teach-box").style.display = "none";
-        }
-    })
-}
+    <script>
+        const chatDiv = document.getElementById("chat");
 
-function teach() {
-    let question = document.getElementById("question").value;
-    let answer = document.getElementById("teach-answer").value;
-    fetch("/teach", {
-        method: "POST",
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({question, answer})
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-        document.getElementById("teach-box").style.display = "none";
-        document.getElementById("teach-answer").value = "";
-    })
-}
-</script>
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement("div");
+            msgDiv.classList.add("message");
+            const span = document.createElement("span");
+            span.textContent = text;
+            span.classList.add(sender);
+            msgDiv.appendChild(span);
+            chatDiv.appendChild(msgDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+
+        async function askAI() {
+            const questionInput = document.getElementById("question");
+            const question = questionInput.value.trim();
+            if (!question) return;
+            appendMessage(question, "user");
+            questionInput.value = "";
+
+            const response = await fetch("/ask", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({question})
+            });
+            const data = await response.json();
+            appendMessage(data.answer, "ai");
+
+            // Show teach section if AI doesn't know
+            if (data.answer.includes("আমি এখনো জানি না")) {
+                document.getElementById("teach-section").style.display = "block";
+            } else {
+                document.getElementById("teach-section").style.display = "none";
+            }
+        }
+
+        async function teachAI() {
+            const questionInput = document.getElementById("question");
+            const answerInput = document.getElementById("teach-answer");
+            const question = questionInput.value.trim();
+            const answer = answerInput.value.trim();
+            if (!question || !answer) return;
+
+            const response = await fetch("/teach", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({question, answer})
+            });
+            const data = await response.json();
+            appendMessage("✅ " + data.message, "ai");
+
+            answerInput.value = "";
+            document.getElementById("teach-section").style.display = "none";
+        }
+    </script>
 </body>
 </html>
