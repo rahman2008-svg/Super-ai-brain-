@@ -1,17 +1,16 @@
 import sqlite3
 
-conn = sqlite3.connect("super_ai.db")
-c = conn.cursor()
+DB_PATH = "super_ai.db"
 
-# Create table for questions and answers
+conn = sqlite3.connect(DB_PATH)
+c = conn.cursor()
 c.execute("""
 CREATE TABLE IF NOT EXISTS knowledge (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    question TEXT UNIQUE,
+    question TEXT PRIMARY KEY,
     answer TEXT
 )
 """)
-
 conn.commit()
 conn.close()
-print("✅ Database ready with Teach system")
+
+print("Database initialized!")
