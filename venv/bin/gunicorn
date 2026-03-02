@@ -1,0 +1,6 @@
+#!/data/data/com.termux/files/home/super_ai_app/venv/bin/python3
+import sys
+from gunicorn.app.wsgiapp import run
+if __name__ == '__main__':
+    sys.argv[0] = sys.argv[0].removesuffix('.exe')
+    sys.exit(run())
